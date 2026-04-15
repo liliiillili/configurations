@@ -1,0 +1,11 @@
+.markdown-preview-view,
+.markdown-source-view,
+.cm-content {
+    max-width: 100%;
+    margin: auto;
+}
+
+body {
+  --file-line-width: 100% !important;
+}
+

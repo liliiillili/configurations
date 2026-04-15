@@ -1,0 +1,79 @@
+body.theme-light {
+  --text-normal: #000000;
+  --text-faint: #000000;
+  --text-accent: #000000;
+  --text-muted: #000000;
+}
+
+body.theme-dark {
+  --background-primary: #151515;
+  --background-secondary: #1c1c1c;
+  --background-tertiary: #202020;
+
+  --text-normal: #e8e8d3;
+  --text-faint: #888888;
+  --text-accent: #ffffff;
+  --text-muted: #808080;
+
+  --interactive-accent: #ffffff;
+  --interactive-accent-hover: #ffd59e;
+
+  --accent-color: #ffffff;
+
+  --code-background: #1a1a1a;
+  --code-normal: #e8e8d3;
+  --code-comment: #888888;
+  --code-keyword: #8197bf;
+  --code-string: #99ad6a;
+  --code-number: #cf6a4c;
+  --code-function: #fad07a;
+  --code-operator: #c6b6ee;
+}
+
+/* ── Live Preview (CodeMirror 6) ── */
+.cm-s-obsidian span.cm-keyword        { color: var(--code-keyword); }
+.cm-s-obsidian span.cm-string         { color: var(--code-string); }
+.cm-s-obsidian span.cm-number         { color: var(--code-number); }
+.cm-s-obsidian span.cm-def            { color: var(--code-function); }
+.cm-s-obsidian span.cm-operator       { color: var(--code-operator); }
+.cm-s-obsidian span.cm-comment        { color: var(--code-comment); }
+.cm-s-obsidian span.cm-variable       { color: var(--code-property); }
+.cm-s-obsidian span.cm-variable-2     { color: var(--code-property); }
+.cm-s-obsidian span.cm-builtin        { color: var(--code-function); }
+.cm-s-obsidian span.cm-atom           { color: var(--code-keyword); }
+.cm-s-obsidian span.cm-meta           { color: var(--code-tag); }
+.cm-s-obsidian span.cm-punctuation    { color: var(--code-operator); }
+
+/* ── Reading View (Prism.js) ── */
+.markdown-preview-view pre code .token.keyword      { color: var(--code-keyword); }
+.markdown-preview-view pre code .token.string        { color: var(--code-string); }
+.markdown-preview-view pre code .token.number        { color: var(--code-number); }
+.markdown-preview-view pre code .token.function      { color: var(--code-function); }
+.markdown-preview-view pre code .token.operator      { color: var(--code-operator); }
+.markdown-preview-view pre code .token.comment       { color: var(--code-comment); }
+.markdown-preview-view pre code .token.builtin       { color: var(--code-function); }
+.markdown-preview-view pre code .token.boolean       { color: var(--code-keyword); }
+.markdown-preview-view pre code .token.decorator     { color: var(--code-tag); }
+.markdown-preview-view pre code .token.class-name    { color: var(--code-function); }
+.markdown-preview-view pre code .token.punctuation   { color: var(--code-operator); }
+.markdown-preview-view pre code .token.triple-quoted-string { color: var(--code-string); }
+
+.markdown-rendered a { color: #8fbfdc; }
+.markdown-rendered h1, .markdown-rendered h2, .markdown-rendered h3 {}
+
+.cm-s-obsidian span.cm-link { color: #8fbfdc; }
+
+.markdown-preview-view {
+  color: var(--text-normal);
+}
+
+body.theme-light .HyperMD-header-1 .cm-header-1,
+body.theme-light .HyperMD-header-2 .cm-header-2,
+body.theme-light .HyperMD-header-3 .cm-header-3 {
+  color: var(--text-accent) !important;
+}
+
+
+/* Highlights */
+.markdown-rendered mark { background-color: #453a00; color: #ffd75f; }
+.cm-s-obsidian span.cm-header { color: #ffffff !important; }

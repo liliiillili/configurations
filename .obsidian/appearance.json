@@ -1,0 +1,12 @@
+{
+  "accentColor": "#ffffff",
+  "theme": "obsidian",
+  "enabledCssSnippets": [
+    "jellybeans",
+    "wide-view"
+  ],
+  "translucency": false,
+  "showRibbon": false,
+  "showViewHeader": false,
+  "nativeMenus": true
+}

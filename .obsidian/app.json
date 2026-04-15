@@ -1,0 +1,23 @@
+{
+  "showInlineTitle": true,
+  "newFileLocation": "current",
+  "attachmentFolderPath": "./attachments",
+  "useMarkdownLinks": true,
+  "defaultViewMode": "source",
+  "livePreview": true,
+  "spellcheck": false,
+  "autoPairBrackets": false,
+  "autoPairMarkdown": false,
+  "autoConvertHtml": true,
+  "vimMode": true,
+  "promptDelete": false,
+  "rightToLeft": false,
+  "showLineNumber": false,
+  "readableLineLength": true,
+  "pdfExportSettings": {
+    "pageSize": "Letter",
+    "landscape": false,
+    "margin": "0",
+    "downscalePercent": 100
+  }
+}
