@@ -143,8 +143,3 @@ let g:syntastic_python_checkers=['flake8']
 let g:flake8_show_in_file=1
 let g:flake8_max_markers=500
 nnoremap <C-K> :call flake8#Flake8ShowError()<cr>
-
-"function! CenterCursor()
-"  normal! zz
-"endfunction
-"autocmd CursorMoved * call CenterCursor()
