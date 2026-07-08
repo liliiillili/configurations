@@ -1,13 +1,12 @@
 if empty(glob('~/.vim/colors/jellybeans.vim'))
     silent !curl -fLo ~/.vim/colors/jellybeans.vim --create-dirs
                 \ https://raw.githubusercontent.com/nanotech/jellybeans.vim/master/colors/jellybeans.vim
-    source $MYVIMRC
 endif
 
 if empty(glob('~/.vim/autoload/plug.vim'))
     silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
                 \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-    autocmd VimEnter * PlugInstall --sync | source $MYVIMRC | qa
+    autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
 endif
 
 call plug#begin('~/.vim/plugged')
@@ -17,13 +16,14 @@ Plug 'vim-airline/vim-airline-themes'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'blueyed/vim-diminactive'
 Plug 'sheerun/vim-polyglot'
-Plug 'dense-analysis/ale'
 Plug 'airblade/vim-gitgutter'
 Plug 'tpope/vim-fugitive'
 Plug 'yuezk/vim-js'
 Plug 'maxmellon/vim-jsx-pretty'
-Plug 'davidhalter/jedi-vim'
 Plug 'hynek/vim-python-pep8-indent'
+Plug 'prabirshrestha/vim-lsp'
+Plug 'prabirshrestha/asyncomplete.vim'
+Plug 'prabirshrestha/asyncomplete-lsp.vim'
 call plug#end()
 
 let g:jellybeans_overrides = {
@@ -32,6 +32,11 @@ let g:jellybeans_overrides = {
     \    'Search':      {'guibg':'00FF00', 'guifg':'000000', 'attr':'none'},
     \    'ColorColumn': {'guibg':'1c1c1c', 'guifg':'none'  , 'ctermbg':'1c1c1c', 'ctermfg':'none'},
     \}
+if has('termguicolors')
+    set termguicolors
+else
+    set t_Co=256
+endif
 color jellybeans
 
 set backspace=indent,eol,start
@@ -49,13 +54,26 @@ set nowrap
 set hlsearch
 set incsearch
 set ignorecase
-set t_Co=256
+set smartcase
 set encoding=utf-8
 set termencoding=utf-8
 set fileencodings=utf-8
 set laststatus=2
 set wildmenu
 set showcmd
+set hidden
+set updatetime=300
+set signcolumn=yes
+set nomodeline
+set scrolloff=5
+set ttimeoutlen=10
+set completeopt=menuone,noinsert,noselect
+
+"if !isdirectory($HOME . '/.vim/undodir')
+"    call mkdir($HOME . '/.vim/undodir', 'p')
+"endif
+"set undofile
+"set undodir=~/.vim/undodir
 
 filetype plugin indent on
 au BufNewFile,BufRead *.py        set tabstop=4 softtabstop=4 shiftwidth=4
@@ -64,17 +82,91 @@ au BufNewFile,BufRead *.js        set tabstop=2 softtabstop=2 shiftwidth=2
 au BufNewFile,BufRead *.html      set tabstop=2 softtabstop=2 shiftwidth=2
 au BufNewFile,BufRead *.jsx       set tabstop=2 softtabstop=2 shiftwidth=2
 au BufNewFile,BufRead Jenkinsfile set tabstop=4 softtabstop=4 shiftwidth=4 | setf groovy
-au BufNewFile,BufRead *.yam       set tabstop=2 softtabstop=2 shiftwidth=2 expandtab
+au BufNewFile,BufRead *.yml       set tabstop=2 softtabstop=2 shiftwidth=2 expandtab
 au BufNewFile,BufRead *.yaml      set tabstop=2 softtabstop=2 shiftwidth=2 expandtab
-
 
 set cursorline
 hi cursorline ctermbg=233 cterm=none
 
-" let g:polyglot_disabled = ['csv']
-let g:ale_linters = {'csv': []}
-let g:ale_fixers = {'csv': []}
+if executable('basedpyright-langserver')
+    au User lsp_setup call lsp#register_server({
+        \ 'name': 'basedpyright',
+        \ 'cmd': {server_info->['basedpyright-langserver', '--stdio']},
+        \ 'allowlist': ['python'],
+        \ 'workspace_config': {
+        \   'basedpyright': {
+        \     'analysis': {
+        \       'typeCheckingMode': 'basic',
+        \       'autoSearchPaths': v:true,
+        \       'diagnosticMode': 'openFilesOnly',
+        \     },
+        \   },
+        \ },
+        \ })
+endif
 
+if executable('ruff')
+    au User lsp_setup call lsp#register_server({
+        \ 'name': 'ruff',
+        \ 'cmd': {server_info->['ruff', 'server']},
+        \ 'allowlist': ['python'],
+        \ })
+endif
+
+let g:lsp_diagnostics_enabled = 1
+let g:lsp_diagnostics_signs_error = {'text': '✘'}
+let g:lsp_diagnostics_signs_warning = {'text': '⚠'}
+highlight LspErrorText ctermbg=NONE ctermfg=red guibg=NONE guifg=red
+highlight LspWarningText ctermbg=NONE ctermfg=yellow guibg=NONE guifg=yellow
+let g:lsp_diagnostics_virtual_text_enabled = 1
+let g:lsp_diagnostics_virtual_text_align = 'after'
+let g:lsp_diagnostics_virtual_text_prefix = ' ‣ '
+let g:lsp_diagnostics_virtual_text_insert_mode_enabled = 0
+let g:lsp_diagnostics_float_cursor = 0
+let g:lsp_diagnostics_float_delay = 200
+let g:lsp_diagnostics_echo_cursor = 0
+let g:lsp_document_highlight_enabled = 0
+let g:lsp_semantic_enabled = 0
+
+
+function! s:toggle_diagnostics() abort
+    if get(g:, 'lsp_diagnostics_enabled', 1)
+        let g:lsp_diagnostics_enabled = 0
+        echo 'Diagnostics: OFF'
+    else
+        let g:lsp_diagnostics_enabled = 1
+        echo 'Diagnostics: ON'
+    endif
+endfunction
+nnoremap <C-L> :call <SID>toggle_diagnostics()<CR>
+
+function! s:on_lsp_buffer_enabled() abort
+    setlocal omnifunc=lsp#complete
+    nmap <buffer> gd  <plug>(lsp-definition)
+    nmap <buffer> \g  <plug>(lsp-definition)
+    nmap <buffer> \t  <plug>(lsp-type-definition)
+    nmap <buffer> grr <plug>(lsp-references)
+    nmap <buffer> grn <plug>(lsp-rename)
+    nmap <buffer> gO  <plug>(lsp-document-symbol-search)
+    nmap <buffer> K   <plug>(lsp-hover)
+    nmap <buffer> ]d  <plug>(lsp-next-diagnostic)
+    nmap <buffer> [d  <plug>(lsp-previous-diagnostic)
+    nmap <buffer> \e  <plug>(lsp-document-diagnostics)
+    nnoremap <buffer> \f :LspDocumentFormatSync --server=ruff<CR>
+endfunction
+
+augroup lsp_install
+    au!
+    autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+augroup END
+
+let g:asyncomplete_auto_popup = 1
+let g:asyncomplete_min_chars = 0
+let g:asyncomplete_popup_delay = 50
+inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+inoremap <expr> <CR>    pumvisible() ? asyncomplete#close_popup() : "\<CR>"
+imap <C-Space> <Plug>(asyncomplete_force_refresh)
 
 " (Custom remap) Run Python
 autocmd FileType python map <buffer> <F5> :w<CR>:exec '!clear;python3' shellescape(@%, 1)<CR>
@@ -91,10 +183,11 @@ let HlUnderCursor=0
 autocmd CursorMoved * exe exists("HlUnderCursor") ? HlUnderCursor ? printf('match IncSearch /\V\<%s\>/', escape(expand('<cword>'), '/\')):'match none':""
 nnoremap <silent> <F4> :exe "let HlUnderCursor=exists(\"HlUnderCursor\")?HlUnderCursor*-1+1:1"<CR>
 
-" (Command) Remove Whitespace
+" (Command) Text utils
 command! WhiteSpace %s/\s\+$//e
 command! ELRemove :g/^$/d
-command! Defang :%s/\(.*\)\.\(.*\)/\1[.]\2/g
+command! Defang :%s/\./[.]/g
+command! Refang :%s/\[\.\]/./g
 
 " (Plugin) blueyed/vim-diminactive
 let g:diminactive_enable_focus = 1
@@ -107,48 +200,27 @@ let g:indent_guides_guide_size = 1
 
 " (Plugin) scrooloose/nerdtree
 let NERDTreeShowHidden = 1
-let NERDTreeQuitOnOpen=1
+let NERDTreeQuitOnOpen = 1
 map <C-n> :NERDTreeToggle<CR>
 
 " (Plugin) vim-airline
 let g:airline_theme='hybrid'
-let g:airline_solorized_bg='dark'
 let g:airline_powerline_fonts=1
 let g:airline#extensions#branch#enabled=1
-
-" (Plugin) vim-airline-themes
-let g:airline#extensions#tabline#enabled = 1 " turn on buffer list
-let g:airline#extension#tabline#left_sep=' '
-let g:airline#extension#tabline#left_alt_sep='|'
-let g:airline#extension#tabline#formatter='unique_tail'
+let g:airline#extensions#tabline#enabled = 1
+let g:airline#extensions#tabline#left_sep=' '
+let g:airline#extensions#tabline#left_alt_sep='|'
+let g:airline#extensions#tabline#formatter='unique_tail'
 
 " (Plugin) maxmellon/vim-jsx-pretty
-let g:vim_jsx_pretty_colorful_config = 1 " default 0
+let g:vim_jsx_pretty_colorful_config = 1
 
-" (Plugin) ALE
-nnoremap <C-L> :ALEToggle<cr>
-let g:ale_python_flake8_options = '--max-line-length=88'
-let g:ale_linters = { 'python': ['flake8', 'pydocstyle', 'bandit', 'mypy'] }
-let g:ale_fixers = {'*':['remove_trailing_lines', 'trim_whitespace'], 'python': ['black']}
-let g:ale_fix_on_save = 0
-let g:ale_floating_window_border = ['│', '─', '╭', '╮', '╯', '╰', '│', '─']
-let g:ale_sign_error                  = '✘'
-let g:ale_sign_warning                = '⚠'
-highlight ALEErrorSign ctermbg        =NONE ctermfg=red
-highlight ALEWarningSign ctermbg      =NONE ctermfg=yellow
-let g:ale_use_global_executables = 0
-
-" (Plugin) flake8
-let g:syntastic_python_checkers=['flake8']
-let g:flake8_show_in_file=1
-let g:flake8_max_markers=500
-nnoremap <C-K> :call flake8#Flake8ShowError()<cr>
-
-"Windows(WSL)
-let s:clip = '/mnt/c/Windows/System32/clip.exe'  " change this path according to your mount point
+let s:clip = '/mnt/c/Windows/System32/clip.exe'
 if executable(s:clip)
     augroup WSLYank
         autocmd!
-        autocmd TextYankPost * if v:event.operator ==# 'y' | call system(s:clip, @0) | endif
+        autocmd TextYankPost * if v:event.operator ==# 'y' |
+            \ call system('iconv -f UTF-8 -t UTF-16LE | ' . s:clip, @0) |
+            \ endif
     augroup END
 endif
