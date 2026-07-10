@@ -130,11 +130,13 @@ let g:lsp_semantic_enabled = 0
 
 
 function! s:toggle_diagnostics() abort
-    if get(g:, 'lsp_diagnostics_enabled', 1)
-        let g:lsp_diagnostics_enabled = 0
+    if get(s:, 'diag_on', 1)
+        call lsp#disable_diagnostics_for_buffer()
+        let s:diag_on = 0
         echo 'Diagnostics: OFF'
     else
-        let g:lsp_diagnostics_enabled = 1
+        call lsp#enable_diagnostics_for_buffer()
+        let s:diag_on = 1
         echo 'Diagnostics: ON'
     endif
 endfunction
