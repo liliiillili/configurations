@@ -32,6 +32,12 @@ cat >> "$BASHRC" <<'EOF'
 # --- aliases ---
 alias bat='batcat -p --no-paging'
 alias fd='fdfind'
+pbcopy()  { iconv -f UTF-8 -t UTF-16LE | clip.exe; }
+pbpaste() {
+  powershell.exe -NoProfile -Command \
+    '[Console]::OutputEncoding=[Text.Encoding]::UTF8; [Console]::Out.Write((Get-Clipboard -Raw))' \
+  | sed 's/\r$//'
+}
 EOF
 
 curl -LsSf https://astral.sh/uv/install.sh | sh
