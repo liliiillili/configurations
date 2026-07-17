@@ -1,76 +1,228 @@
-#!/usr/bin/env bash
-set -euo pipefail
+if empty(glob('~/.vim/colors/jellybeans.vim'))
+    silent !curl -fLo ~/.vim/colors/jellybeans.vim --create-dirs
+                \ https://raw.githubusercontent.com/nanotech/jellybeans.vim/master/colors/jellybeans.vim
+endif
 
-PACKAGES=(
-    tree
-    jq
-    bat
-    htop
-    btop
-    fd-find
-    ripgrep
-    fzf
-)
+if empty(glob('~/.vim/autoload/plug.vim'))
+    silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
+                \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+    autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
 
-echo "[*] apt update & upgrade"
-sudo apt-get update -y
-sudo apt-get upgrade -y
+call plug#begin('~/.vim/plugged')
+Plug 'scrooloose/nerdtree'
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'nathanaelkane/vim-indent-guides'
+Plug 'blueyed/vim-diminactive'
+Plug 'sheerun/vim-polyglot'
+Plug 'airblade/vim-gitgutter'
+Plug 'tpope/vim-fugitive'
+Plug 'yuezk/vim-js'
+Plug 'maxmellon/vim-jsx-pretty'
+Plug 'hynek/vim-python-pep8-indent'
+Plug 'prabirshrestha/vim-lsp'
+Plug 'prabirshrestha/asyncomplete.vim'
+Plug 'prabirshrestha/asyncomplete-lsp.vim'
+call plug#end()
 
-echo "[*] Package install: ${PACKAGES[*]}"
-sudo apt-get install -y "${PACKAGES[@]}"
+let g:jellybeans_overrides = {
+    \    'background':  {'guibg':'000000'},
+    \    'Todo':        {'guibg':'000000', 'guifg':'33FF33', 'ctermbg':'000000', 'ctermfg':'33FF33'},
+    \    'Search':      {'guibg':'00FF00', 'guifg':'000000', 'attr':'none'},
+    \    'ColorColumn': {'guibg':'1c1c1c', 'guifg':'none'  , 'ctermbg':'1c1c1c', 'ctermfg':'none'},
+    \}
+if has('termguicolors')
+    set termguicolors
+else
+    set t_Co=256
+endif
+color jellybeans
 
-BASHRC="$HOME/.bashrc"
-MARKER_BEGIN="# >>> init.sh managed block >>>"
-MARKER_END="# <<< init.sh managed block <<<"
+set backspace=indent,eol,start
+set number
+set title
+set showmatch
+set autoindent
+set smarttab
+set expandtab
+set smartindent
+set splitright
+set splitbelow
+set clipboard=unnamed
+set nowrap
+set hlsearch
+set incsearch
+set ignorecase
+set smartcase
+set encoding=utf-8
+set termencoding=utf-8
+set fileencodings=utf-8
+set laststatus=2
+set wildmenu
+set showcmd
+set hidden
+set updatetime=300
+set signcolumn=yes
+set nomodeline
+set scrolloff=5
+set ttimeoutlen=10
+set completeopt=menuone,noinsert,noselect
 
-if grep -qF "$MARKER_BEGIN" "$BASHRC" 2>/dev/null; then
-    sed -i "/$MARKER_BEGIN/,/$MARKER_END/d" "$BASHRC"
-fi
+"if !isdirectory($HOME . '/.vim/undodir')
+"    call mkdir($HOME . '/.vim/undodir', 'p')
+"endif
+"set undofile
+"set undodir=~/.vim/undodir
 
-cat >> "$BASHRC" <<'EOF'
-# >>> init.sh managed block >>>
-# --- aliases ---
-alias bat='batcat -p --no-paging'
-alias fd='fdfind'
-pbcopy()  { iconv -f UTF-8 -t UTF-16LE | clip.exe; }
-pbpaste() {
-  powershell.exe -NoProfile -Command \
-    '[Console]::OutputEncoding=[Text.Encoding]::UTF8; [Console]::Out.Write((Get-Clipboard -Raw))' \
-  | sed 's/\r$//'
-}
-EOF
+filetype plugin indent on
+au BufNewFile,BufRead *.py        set tabstop=4 softtabstop=4 shiftwidth=4
+au BufNewFile,BufRead *.json      set tabstop=2 softtabstop=2 shiftwidth=2
+au BufNewFile,BufRead *.js        set tabstop=2 softtabstop=2 shiftwidth=2
+au BufNewFile,BufRead *.html      set tabstop=2 softtabstop=2 shiftwidth=2
+au BufNewFile,BufRead *.jsx       set tabstop=2 softtabstop=2 shiftwidth=2
+au BufNewFile,BufRead Jenkinsfile set tabstop=4 softtabstop=4 shiftwidth=4 | setf groovy
+au BufNewFile,BufRead *.yml       set tabstop=2 softtabstop=2 shiftwidth=2 expandtab
+au BufNewFile,BufRead *.yaml      set tabstop=2 softtabstop=2 shiftwidth=2 expandtab
 
-# --- vimrc setup (OS detection) ---
-VIMRC_BASE="https://raw.githubusercontent.com/liliiillili/configurations/refs/heads/main"
+set cursorline
+hi cursorline ctermbg=233 cterm=none
 
-case "$(uname -s)" in
-    Darwin)
-        VIMRC_URL="$VIMRC_BASE/.vimrc.mac"
-        echo "[*] macOS detected -> .vimrc.mac"
-        ;;
-    Linux)
-        VIMRC_URL="$VIMRC_BASE/.vimrc.wsl"
-        echo "[*] Linux detected -> .vimrc.wsl"
-        ;;
-    *)
-        echo "[!] Unknown OS: $(uname -s), skip vimrc setup" >&2
-        VIMRC_URL=""
-        ;;
-esac
+if executable('basedpyright-langserver')
+    au User lsp_setup call lsp#register_server({
+        \ 'name': 'basedpyright',
+        \ 'cmd': {server_info->['basedpyright-langserver', '--stdio']},
+        \ 'allowlist': ['python'],
+        \ 'workspace_config': {
+        \   'basedpyright': {
+        \     'analysis': {
+        \       'typeCheckingMode': 'basic',
+        \       'autoSearchPaths': v:true,
+        \       'diagnosticMode': 'openFilesOnly',
+        \     },
+        \   },
+        \ },
+        \ })
+endif
 
-if [ -n "$VIMRC_URL" ]; then
-    if [ -f "$HOME/.vimrc" ]; then
-        cp "$HOME/.vimrc" "$HOME/.vimrc.bak.$(date +%Y%m%d%H%M%S)"
-        echo "[*] Existing ~/.vimrc backed up"
-    fi
-    curl -LsSf -o "$HOME/.vimrc" "$VIMRC_URL"
-    echo "[*] ~/.vimrc saved from $VIMRC_URL"
-fi
+if executable('ruff')
+    au User lsp_setup call lsp#register_server({
+        \ 'name': 'ruff',
+        \ 'cmd': {server_info->['ruff', 'server']},
+        \ 'allowlist': ['python'],
+        \ })
+endif
 
-curl -LsSf https://astral.sh/uv/install.sh | sh
-export PATH="$HOME/.local/bin:$PATH"
+let g:lsp_diagnostics_enabled = 1
+let g:lsp_diagnostics_signs_error = {'text': '✘'}
+let g:lsp_diagnostics_signs_warning = {'text': '⚠'}
+highlight LspErrorText ctermbg=NONE ctermfg=red guibg=NONE guifg=red
+highlight LspWarningText ctermbg=NONE ctermfg=yellow guibg=NONE guifg=yellow
+let g:lsp_diagnostics_virtual_text_enabled = 1
+let g:lsp_diagnostics_virtual_text_align = 'after'
+let g:lsp_diagnostics_virtual_text_prefix = ' ‣ '
+let g:lsp_diagnostics_virtual_text_insert_mode_enabled = 0
+let g:lsp_diagnostics_float_cursor = 0
+let g:lsp_diagnostics_float_delay = 200
+let g:lsp_diagnostics_echo_cursor = 0
+let g:lsp_document_highlight_enabled = 0
+let g:lsp_semantic_enabled = 0
 
-uv tool install basedpyright
-uv tool install ruff
 
-echo "[*] Finish"
+function! s:toggle_diagnostics() abort
+    if get(s:, 'diag_on', 1)
+        call lsp#disable_diagnostics_for_buffer()
+        let s:diag_on = 0
+        echo 'Diagnostics: OFF'
+    else
+        call lsp#enable_diagnostics_for_buffer()
+        let s:diag_on = 1
+        echo 'Diagnostics: ON'
+    endif
+endfunction
+nnoremap <C-L> :call <SID>toggle_diagnostics()<CR>
+
+function! s:on_lsp_buffer_enabled() abort
+    setlocal omnifunc=lsp#complete
+    nmap <buffer> gd  <plug>(lsp-definition)
+    nmap <buffer> \g  <plug>(lsp-definition)
+    nmap <buffer> \t  <plug>(lsp-type-definition)
+    nmap <buffer> grr <plug>(lsp-references)
+    nmap <buffer> grn <plug>(lsp-rename)
+    nmap <buffer> gO  <plug>(lsp-document-symbol-search)
+    nmap <buffer> K   <plug>(lsp-hover)
+    nmap <buffer> ]d  <plug>(lsp-next-diagnostic)
+    nmap <buffer> [d  <plug>(lsp-previous-diagnostic)
+    nmap <buffer> \e  <plug>(lsp-document-diagnostics)
+    nnoremap <buffer> \f :LspDocumentFormatSync --server=ruff<CR>
+endfunction
+
+augroup lsp_install
+    au!
+    autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+augroup END
+
+let g:asyncomplete_auto_popup = 1
+let g:asyncomplete_min_chars = 0
+let g:asyncomplete_popup_delay = 50
+inoremap <expr> <Tab>   pumvisible() ? "\<C-n>" : "\<Tab>"
+inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+inoremap <expr> <CR>    pumvisible() ? asyncomplete#close_popup() : "\<CR>"
+imap <C-Space> <Plug>(asyncomplete_force_refresh)
+
+" (Custom remap) Run Python
+autocmd FileType python map <buffer> <F5> :w<CR>:exec '!clear;python3' shellescape(@%, 1)<CR>
+autocmd FileType python imap <buffer> <F5> <esc>:w<CR>:exec '!clear;python3' shellescape(@%, 1)<CR>
+
+" (Custom) Last Edit Space Move
+au BufReadPost *
+    \ if line("'\"") > 0 && line("'\"") <= line("$") |
+    \ exe "norm g`\"" |
+    \ endif
+
+" (Custom) Current word highlight
+let HlUnderCursor=0
+autocmd CursorMoved * exe exists("HlUnderCursor") ? HlUnderCursor ? printf('match IncSearch /\V\<%s\>/', escape(expand('<cword>'), '/\')):'match none':""
+nnoremap <silent> <F4> :exe "let HlUnderCursor=exists(\"HlUnderCursor\")?HlUnderCursor*-1+1:1"<CR>
+
+" (Command) Text utils
+command! WhiteSpace %s/\s\+$//e
+command! ELRemove :g/^$/d
+command! Defang :%s/\./[.]/g
+command! Refang :%s/\[\.\]/./g
+
+" (Plugin) blueyed/vim-diminactive
+let g:diminactive_enable_focus = 1
+
+" (Plugin) nathanaelkane/vim-indent-guides
+let g:indent_guides_enable_on_vim_startup = 1
+let g:indent_guides_auto_colors = 0
+let g:indent_guides_start_level = 2
+let g:indent_guides_guide_size = 1
+
+" (Plugin) scrooloose/nerdtree
+let NERDTreeShowHidden = 1
+let NERDTreeQuitOnOpen = 1
+map <C-n> :NERDTreeToggle<CR>
+
+" (Plugin) vim-airline
+let g:airline_theme='hybrid'
+let g:airline_powerline_fonts=1
+let g:airline#extensions#branch#enabled=1
+let g:airline#extensions#tabline#enabled = 1
+let g:airline#extensions#tabline#left_sep=' '
+let g:airline#extensions#tabline#left_alt_sep='|'
+let g:airline#extensions#tabline#formatter='unique_tail'
+
+" (Plugin) maxmellon/vim-jsx-pretty
+let g:vim_jsx_pretty_colorful_config = 1
+
+let s:clip = '/mnt/c/Windows/System32/clip.exe'
+if executable(s:clip)
+    augroup WSLYank
+        autocmd!
+        autocmd TextYankPost * if v:event.operator ==# 'y' |
+            \ call system('iconv -f UTF-8 -t UTF-16LE | ' . s:clip, @0) |
+            \ endif
+    augroup END
+endif
