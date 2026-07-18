@@ -10,6 +10,8 @@ PACKAGES=(
     fd-find
     ripgrep
     fzf
+    parallel
+    whois
 )
 
 echo "[*] apt update & upgrade"
@@ -80,6 +82,18 @@ if [ -n "$VIMRC_URL" ]; then
     curl -LsSf -o "$HOME/.vimrc" "$VIMRC_URL"
     echo "[*] ~/.vimrc saved from $VIMRC_URL"
 fi
+
+# --- ip_whois script ---
+mkdir -p "$HOME/.local/bin"
+cat > "$HOME/.local/bin/ip_whois" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+ip="${1:-}"
+[[ -z "$ip" ]] && { echo "usage: $0 <ip>" >&2; exit 1; }
+whois -h whois.cymru.com " -v $ip" | tail -n 1
+EOF
+chmod +x "$HOME/.local/bin/ip_whois"
+echo "[*] ip_whois installed to ~/.local/bin"
 
 curl -LsSf https://astral.sh/uv/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
