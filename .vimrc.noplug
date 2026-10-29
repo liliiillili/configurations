@@ -1,0 +1,112 @@
+if has('termguicolors')
+    let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+    let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+    set termguicolors
+else
+    set t_Co=256
+endif
+
+set background=dark
+
+set backspace=indent,eol,start
+set number
+set title
+set showmatch
+set autoindent
+set smarttab
+set expandtab
+set splitright
+set splitbelow
+set nowrap
+set hlsearch
+set incsearch
+set ignorecase
+set smartcase
+set encoding=utf-8
+set termencoding=utf-8
+set fileencodings=utf-8,cp949,euc-kr,latin1
+set laststatus=2
+set wildmenu
+set showcmd
+set hidden
+set updatetime=300
+set nomodeline
+set scrolloff=5
+set ttimeoutlen=10
+set completeopt=menuone,noinsert,noselect
+"set signcolumn=yes
+
+filetype plugin indent on
+
+augroup MyFileSettings
+    autocmd!
+    au BufNewFile,BufRead *.py        set tabstop=4 softtabstop=4 shiftwidth=4
+    au BufNewFile,BufRead *.json      set tabstop=2 softtabstop=2 shiftwidth=2
+    au BufNewFile,BufRead *.js        set tabstop=2 softtabstop=2 shiftwidth=2
+    au BufNewFile,BufRead *.html      set tabstop=2 softtabstop=2 shiftwidth=2
+    au BufNewFile,BufRead *.jsx       set tabstop=2 softtabstop=2 shiftwidth=2
+    au BufNewFile,BufRead Jenkinsfile set tabstop=4 softtabstop=4 shiftwidth=4 | setf groovy
+    au BufNewFile,BufRead *.yml       set tabstop=2 softtabstop=2 shiftwidth=2 expandtab
+    au BufNewFile,BufRead *.yaml      set tabstop=2 softtabstop=2 shiftwidth=2 expandtab
+augroup END
+
+set cursorline
+hi CursorLine ctermbg=234 cterm=none guibg=#1c1c1c
+"hi CursorLine ctermbg=235 cterm=none guibg=#262626
+"hi CursorLine ctermbg=236 cterm=none guibg=#303030
+
+" (Custom remap) Run Python
+augroup RunPython
+    autocmd!
+    autocmd FileType python map <buffer> <F5> :w<CR>:exec '!clear;python3' shellescape(@%, 1)<CR>
+    autocmd FileType python imap <buffer> <F5> <esc>:w<CR>:exec '!clear;python3' shellescape(@%, 1)<CR>
+augroup END
+
+" (Custom) Last Edit Space Move
+augroup LastEditPos
+    autocmd!
+    au BufReadPost *
+        \ if line("'\"") > 0 && line("'\"") <= line("$") |
+        \ exe "norm g`\"" |
+        \ endif
+augroup END
+
+" (Custom) Current word highlight
+let HlUnderCursor=0
+augroup HlWord
+    autocmd!
+    autocmd CursorMoved * exe exists("HlUnderCursor") ? HlUnderCursor ? printf('match IncSearch /\V\<%s\>/', escape(expand('<cword>'), '/\')):'match none':""
+augroup END
+nnoremap <silent> <F4> :exe "let HlUnderCursor=exists(\"HlUnderCursor\")?HlUnderCursor*-1+1:1"<CR>
+
+" (Command) Text utils
+command! WhiteSpace %s/\s\+$//e
+command! ELRemove :g/^$/d
+command! Defang :%s/\./[.]/g
+command! Refang :%s/\[\.\]/./g
+
+let s:clip = '/mnt/c/Windows/System32/clip.exe'
+augroup YankToHost
+    autocmd!
+    if executable(s:clip)
+        autocmd TextYankPost * if v:event.operator ==# 'y' |
+            \ call system('iconv -f UTF-8 -t UTF-16LE | ' . s:clip, @0) |
+            \ endif
+    else
+        autocmd TextYankPost * if v:event.operator ==# 'y' |
+            \ call Osc52Copy(join(v:event.regcontents, "\n")) |
+            \ endif
+    endif
+augroup END
+
+if has('clipboard')
+    set clipboard=unnamed
+endif
+
+if has('termguicolors')
+    let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+    let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+    set termguicolors
+else
+    set t_Co=256
+endif
